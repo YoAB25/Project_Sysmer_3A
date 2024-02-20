@@ -10,11 +10,12 @@ controller_manager:
 effort_controller:
   ros__parameters:
     joints:
-      - hip_abduction_left
       - hip_abduction_right
+      - hip_abduction_left
     interface_name: effort
     command_interfaces:
       - effort
     state_interfaces:
       - position
       - velocity
+      - effort
