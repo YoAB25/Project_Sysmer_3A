@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #############################################################################
 # imports
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 		# plot
 		fig = plt.figure()
 		ax1 = plt.axes(projection='3d')
-		ax1.axis('equal')
+		ax1.axis('auto')
 		ax1.set_xlabel('X Long')
 		ax1.set_ylabel('Y Lateral')
 		ax1.set_zlabel('Z Vertical')
