@@ -102,7 +102,7 @@ if __name__ == '__main__':
 		
 		######################################################################		
 		# creat an instance of the leg model using class "model"
-		MyLegLModel = model(points,ang_hip_incl,ang_ankle);
+		MyLegLModel = model(points,ang_hip_incl,ang_ankle)
 		
 		# inits of current angles
 		qHipRoll=0
@@ -185,6 +185,7 @@ if __name__ == '__main__':
 			Z = np.dot(MaddZ,np.array([qHipRoll,qHipIncl,qKnee,qAnkle]))
 			
 			# update q using Dq and Z : q = q + Dq - nu.Z
+			# Dq ~ q is a vector that contains 4 joints
 			qHipRoll = qHipRoll + Dq[0] - nu * Z[0]
 			qHipIncl = qHipIncl + Dq[1] - nu * Z[1]
 			qKnee = qKnee + Dq[2] - nu * Z[2]
