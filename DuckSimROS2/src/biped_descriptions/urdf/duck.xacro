@@ -1,0 +1,973 @@
+<?xml version="1.0"?>
+<robot name="duck" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Propreties -->
+    <xacro:arg name="namespace" default="duck"/>
+    <xacro:arg name="debug" default="0"/>
+
+    <xacro:arg name="cog" default="0 0 0"/>
+    <xacro:arg name="mass" default="0.01"/>
+  
+    <xacro:arg name="ixx" default="0.0015"/>
+    <xacro:arg name="iyy" default="0.0015"/>
+    <xacro:arg name="izz" default="0.0015"/>
+    <xacro:arg name="ixy" default="0.0"/>
+    <xacro:arg name="ixz" default="0.0"/>
+    <xacro:arg name="iyz" default="0.0"/>
+
+    <xacro:arg name="mesh_filename" default="$(find biped_descriptions)/meshes/tbi.stl"/>
+
+    <!-- Links -->
+    <!-- world link -->
+    <!-- <link name="world"/> -->
+
+    <link name="$(arg namespace)/base_link">
+        <inertial>
+        <origin xyz="0 0 -0.1" rpy="0 0 0" />
+        <mass value="$(arg mass)"/>
+        <inertia
+            ixx="$(arg ixx)" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="$(arg iyy)" iyz="$(arg iyz)"
+            izz="$(arg izz)"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.4 0.2 0.2"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.4 0.2 0.2" />
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- Sphere 1 : 2 rotations -->
+    <link name="$(arg namespace)/base_to_hip_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="$(arg mesh_filename)" scale="1 1 1"/> -->
+                <sphere radius="0.03"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+    
+    <joint name="$(arg namespace)/hip_joint_left" type="revolute">
+        <origin xyz="0.0 0.1 0.0" rpy="0 0 0"/>
+        <parent link="$(arg namespace)/base_link"/>
+        <child link="$(arg namespace)/base_to_hip_left"/>
+        <axis xyz="0 1 1"/>                         <!-- Rotation by Y and Z-->
+        <limit effort="3.0" velocity="3.0" lower="-0.5" upper="0.5"/> <!-- Here can be modified later ... (for angles limits)-->
+    </joint>
+
+
+
+    <!-- Mirror base_to_hip link -->
+    <link name="$(arg namespace)/base_to_hip_right">
+        <!-- Adjust the origin for mirroring -->
+        <origin xyz="-$(arg cog)" rpy="0 0 0" />
+        <!-- Copy the inertial properties -->
+        <inertial>
+            <origin xyz="$(arg cog)" rpy="0 0 0" />
+            <mass value="0.001"/>
+            <inertia
+                ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+                iyy="0.0002" iyz="$(arg iyz)"
+                izz="0.0002"/>
+        </inertial>
+        <!-- Mirror the sphere geometry -->
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+
+    <!-- Mirror hip_joint -->
+    <joint name="$(arg namespace)/hip_joint_right" type="revolute">
+        <!-- Adjust the origin for mirroring -->
+        <origin xyz="0.0 -0.1 0.0" rpy="0 0 0"/>
+        <!-- Copy the parent and child links -->
+        <parent link="$(arg namespace)/base_link"/>
+        <child link="$(arg namespace)/base_to_hip_right"/>
+        <!-- Invert the joint axis -->
+        <axis xyz="-1 1 1"/> 
+        <!-- Copy the joint limits -->
+        <limit effort="3.0" velocity="3.0" lower="-0.5" upper="0.5"/> <!-- Here can be modified later ... (for angles limits)-->
+    </joint>
+
+
+    <!-- Femur link -->
+    <link name="$(arg namespace)/femur_link_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.01 0.25 0.01"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.25 0.01"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+
+    <joint name="$(arg namespace)/to_hip_joint_left" type="prismatic">
+        <origin xyz="0.0 0.13 -0.04" rpy="-0.35 0 0"/>
+        <parent link="$(arg namespace)/base_to_hip_left"/>
+        <child link="$(arg namespace)/femur_link_left"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/> 
+    </joint>
+
+
+    <!-- Mirror femur_link -->
+    <link name="$(arg namespace)/femur_link_right">
+        <!-- Adjust the origin for mirroring -->
+        <origin xyz="-$(arg cog)" rpy="0 0 0" />
+        <!-- Copy the inertial properties -->
+        <inertial>
+            <origin xyz="$(arg cog)" rpy="0 0 0" />
+            <mass value="0.001"/>
+            <inertia
+                ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+                iyy="0.0002" iyz="$(arg iyz)"
+                izz="0.0002"/>
+        </inertial>
+        <!-- Mirror the box geometry -->
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.01 0.25 0.01"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.25 0.01"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+
+    <joint name="$(arg namespace)/to_hip_joint_right" type="prismatic">
+        <origin xyz="0.0 -0.13 -0.04" rpy="0.35 0 0"/>
+        <parent link="$(arg namespace)/base_to_hip_right"/>
+        <child link="$(arg namespace)/femur_link_right"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/> 
+    </joint>
+
+
+
+    <!-- Sphere 2 : 1 rotations -->
+    <link name="$(arg namespace)/hip_to_knee_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="$(arg mesh_filename)" scale="1 1 1"/> -->
+                <sphere radius="0.03"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 1 1"/> 
+            </material>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </collision> -->
+    </link>
+    
+    <joint name="$(arg namespace)/knee_joint_left" type="revolute">
+        <origin xyz="0.0 0.125 0.0" rpy="0 0 0"/>
+        <parent link="$(arg namespace)/femur_link_left"/>
+        <child link="$(arg namespace)/hip_to_knee_left"/>
+        <axis xyz="0 1 0"/> <!-- Defines the axis of translation -->
+        <limit effort="3.0" velocity="0.01" lower="-0.5" upper="0.5"/> <!-- Here can be modified later ... (for angles limits)-->
+    </joint>
+
+
+    <!-- Mirror base_to_hip link -->
+    <!-- Sphere 2 : 1 rotations -->
+    <link name="$(arg namespace)/hip_to_knee_right">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0000045" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0000045" iyz="$(arg iyz)"
+            izz="0.0000045"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="$(arg mesh_filename)" scale="1 1 1"/> -->
+                <sphere radius="0.03"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 1 1"/> 
+            </material>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </collision> -->
+    </link>
+    
+    <joint name="$(arg namespace)/knee_joint_right" type="revolute">
+        <origin xyz="0.0 -0.125 0.0" rpy="0 0 0"/>
+        <parent link="$(arg namespace)/femur_link_right"/>
+        <child link="$(arg namespace)/hip_to_knee_right"/>
+        <axis xyz="0 1 0"/> <!-- Defines the axis of translation -->
+        <limit effort="3.0" velocity="0.01" lower="-0.5" upper="0.5"/> <!-- Here can be modified later ... (for angles limits)-->
+    </joint>
+
+
+    <!-- Tibio link -->
+    <link name="$(arg namespace)/tibio_link_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.01 0.3 0.01"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.3 0.01"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+    <joint name="$(arg namespace)/to_knee_joint_left" type="prismatic">
+        <origin xyz="0.0 -0.07 -0.14" rpy="-2.0 0 0"/>
+        <parent link="$(arg namespace)/hip_to_knee_left"/>
+        <child link="$(arg namespace)/tibio_link_left"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/> 
+    </joint>
+
+
+    <!-- Tibio link Mirror-->
+    <link name="$(arg namespace)/tibio_link_right">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.01 0.3 0.01"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.3 0.01"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+    <joint name="$(arg namespace)/to_knee_joint_right" type="prismatic">
+        <origin xyz="0.0 0.07 -0.14" rpy="2.0 0 0"/>
+        <parent link="$(arg namespace)/hip_to_knee_right"/>
+        <child link="$(arg namespace)/tibio_link_right"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/> 
+    </joint>
+
+    
+
+    <!-- Sphere 3 : 1 rotations -->
+    <link name="$(arg namespace)/knee_to_ankle_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="$(arg mesh_filename)" scale="1 1 1"/> -->
+                <sphere radius="0.03"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 1 1"/> 
+            </material>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </collision> -->
+    </link>
+    
+    <joint name="$(arg namespace)/ankle_joint_left" type="revolute">
+        <origin xyz="0.0 0.15 0.0" rpy="0 0 0"/>
+        <parent link="$(arg namespace)/tibio_link_left"/>
+        <child link="$(arg namespace)/knee_to_ankle_left"/>
+        <axis xyz="0 1 0"/> <!-- Defines the axis of translation -->
+        <limit effort="3.0" velocity="0.01" lower="-0.5" upper="0.5"/> <!-- Here can be modified later ... (for angles limits)-->
+    </joint>
+
+
+    <!--ToAnkle mirror -->
+    <!-- Sphere 3 : 1 rotations -->
+    <link name="$(arg namespace)/knee_to_ankle_right">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.01"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="$(arg mesh_filename)" scale="1 1 1"/> -->
+                <sphere radius="0.03"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 1 1"/> 
+            </material>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </collision> -->
+    </link>
+    
+    <joint name="$(arg namespace)/ankle_joint_right" type="revolute">
+        <origin xyz="0.0 -0.15 0.0" rpy="0 0 0"/>
+        <parent link="$(arg namespace)/tibio_link_right"/>
+        <child link="$(arg namespace)/knee_to_ankle_right"/>
+        <axis xyz="0 1 0"/> <!-- Defines the axis of translation -->
+        <limit effort="3.0" velocity="0.01" lower="-0.5" upper="0.5"/> <!-- Here can be modified later ... (for angles limits)-->
+    </joint>
+
+
+    <!-- Tarso link -->
+    <link name="$(arg namespace)/tarso_link_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.01 0.20 0.01"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.20 0.01"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+    <joint name="$(arg namespace)/to_ankle_joint_left" type="prismatic">
+        <origin xyz="0.0 0.05 0.1" rpy="-1.95 0 0"/>
+        <parent link="$(arg namespace)/knee_to_ankle_left"/>
+        <child link="$(arg namespace)/tarso_link_left"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/> 
+    </joint>
+
+
+
+     <!-- Tarso link Mirror -->
+    <link name="$(arg namespace)/tarso_link_right">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.01 0.20 0.01"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.01 0.20 0.01"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+    <joint name="$(arg namespace)/to_ankle_joint_right" type="prismatic">
+        <origin xyz="0.0 -0.05 0.1" rpy="1.95 0 0"/>
+        <parent link="$(arg namespace)/knee_to_ankle_right"/>
+        <child link="$(arg namespace)/tarso_link_right"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/> 
+    </joint>
+
+
+    <!-- Sphere 4 : 1 rotations -->
+    <link name="$(arg namespace)/ankle_to_torso_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="$(arg mesh_filename)" scale="1 1 1"/> -->
+                <sphere radius="0.03"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 1 1"/> 
+            </material>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </collision> -->
+    </link>
+    
+    <joint name="$(arg namespace)/torso_joint_left" type="revolute">
+        <origin xyz="0.0 -0.1 0.0" rpy="0 0 0"/>
+        <parent link="$(arg namespace)/tarso_link_left"/>
+        <child link="$(arg namespace)/ankle_to_torso_left"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="3.0" velocity="0.01" lower="-0.5" upper="0.5"/>
+    </joint>
+
+
+     <!-- Tarso link Mirror -->
+    <link name="$(arg namespace)/ankle_to_torso_right">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <!-- <mesh filename="$(arg mesh_filename)" scale="1 1 1"/> -->
+                <sphere radius="0.03"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 1 1"/> 
+            </material>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.03"/>
+            </geometry>
+        </collision> -->
+    </link>
+    
+    <joint name="$(arg namespace)/torso_joint_right" type="revolute">
+        <origin xyz="0.0 0.1 0.0" rpy="0 0 0"/>
+        <parent link="$(arg namespace)/tarso_link_right"/>
+        <child link="$(arg namespace)/ankle_to_torso_right"/>
+        <axis xyz="0 1 0"/>
+        <limit effort="3.0" velocity="0.01" lower="-0.5" upper="0.5"/>
+    </joint>
+
+
+    <link name="$(arg namespace)/feet_link_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.01 0.12 0.01"/>
+            </geometry>
+        </visual>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                
+                <box size="0.3 0.3 0.3"/>
+            </geometry>
+        </collision> -->
+    </link>
+
+    <joint name="$(arg namespace)/to_feet_joint_left" type="prismatic">
+        <origin xyz="0.05 -0.02 0.0" rpy="0 0.0 1.2"/>
+        <parent link="$(arg namespace)/ankle_to_torso_left"/>
+        <child link="$(arg namespace)/feet_link_left"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/> 
+    </joint>
+
+
+    <link name="$(arg namespace)/feet_link_right">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.01 0.12 0.01"/>
+            </geometry>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <!-- <geometry>
+            
+                <box size="0.3 0.3 0.3"/>
+            </geometry> -->
+        </collision>
+    </link>
+
+    <joint name="$(arg namespace)/to_feet_joint_right" type="prismatic">
+        <origin xyz="0.05 0.02 0.0" rpy="0 0.0 -1.2"/>
+        <parent link="$(arg namespace)/ankle_to_torso_right"/>
+        <child link="$(arg namespace)/feet_link_right"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/> 
+    </joint>
+
+
+
+    <!-- Pales -->
+    <link name="$(arg namespace)/feet_toe_link_right">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.2 0.13 0.001"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 1 1"/> 
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.2 0.13 0.001"/>
+            </geometry>
+        </collision>
+    </link>
+    
+    <joint name="$(arg namespace)/to_toe_joint_right" type="prismatic">
+        <origin xyz="0.0 0.15 0.0" rpy="1.57 0.0 1.57"/>
+        <parent link="$(arg namespace)/feet_link_right"/>
+        <child link="$(arg namespace)/feet_toe_link_right"/>
+        <axis xyz="0 0 0"/> 
+        <limit effort="0.0" velocity="0.0" lower="0.0" upper="0.0"/>
+    </joint>
+
+    <!-- Pales Mirror -->
+    <link name="$(arg namespace)/feet_toe_link_left">
+        <inertial>
+        <origin xyz="$(arg cog)" rpy="0 0 0" />
+        <mass value="0.001"/>
+        <inertia
+            ixx="0.0002" ixy="$(arg ixy)" ixz="$(arg ixz)"
+            iyy="0.0002" iyz="$(arg iyz)"
+            izz="0.0002"/>
+        </inertial>
+        <visual>
+            <origin xyz="0 0 0.0" rpy="0 0 0" />
+            <geometry>
+                <box size="0.2 0.13 0.001"/>
+            </geometry>
+            <material name="blue">
+                <color rgba="0 0 1 1"/> 
+            </material>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.2 0.13 0.001"/>
+            </geometry>
+        </collision>
+    </link>
+    
+    <joint name="$(arg namespace)/to_toe_joint_left" type="revolute">
+        <origin xyz="0.0 -0.15 0.0" rpy="1.57 0.0 1.57"/>
+        <parent link="$(arg namespace)/feet_link_left"/>
+        <child link="$(arg namespace)/feet_toe_link_left"/>
+        <axis xyz="0 0 1"/> 
+       <limit effort="3.0" velocity="0.01" lower="-0.5" upper="0.5"/>
+    </joint>
+
+
+    
+
+
+
+
+    <!-- ROS2 Controls -->
+    <ros2_control name="hip_testing" type="system">
+        <hardware>
+            <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+        </hardware>
+        <joint name="$(arg namespace)/hip_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/hip_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+        <joint name="$(arg namespace)/to_hip_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/to_hip_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+        <joint name="$(arg namespace)/knee_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/knee_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+        <joint name="$(arg namespace)/to_knee_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/to_knee_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+        <joint name="$(arg namespace)/ankle_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/ankle_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+        <joint name="$(arg namespace)/to_ankle_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/to_ankle_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+        <joint name="$(arg namespace)/torso_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/torso_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+        <joint name="$(arg namespace)/to_feet_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/to_feet_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+        <joint name="$(arg namespace)/to_toe_joint_right">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <joint name="$(arg namespace)/to_toe_joint_left">
+        <command_interface name="effort">
+            <param name="min">-10</param>
+            <param name="max">10</param>
+        </command_interface>
+        <state_interface name="position">
+            <param name="initial_value">0.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+        </joint>
+        <!---->
+    </ros2_control>
+
+    <gazebo>
+        <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+        <parameters>$(find biped_descriptions)/config/duck.yaml</parameters>
+        </plugin>
+    </gazebo>
+
+
+
+
+
+
+
+    <!-- Adding some good colors-->
+    <gazebo reference="$(arg namespace)/base_to_hip_left">
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <gazebo reference="$(arg namespace)/hip_to_knee_left">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo reference="$(arg namespace)/knee_to_ankle_left">
+        <material>Gazebo/Orange</material>
+    </gazebo>
+
+    <gazebo reference="$(arg namespace)/ankle_to_torso_left">
+        <material>Gazebo/Yellow</material>
+    </gazebo>
+
+    <gazebo reference="$(arg namespace)/feet_link_left">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+
+    <gazebo reference="$(arg namespace)/base_to_hip_right">
+        <material>Gazebo/Red</material>
+    </gazebo>
+
+    <gazebo reference="$(arg namespace)/hip_to_knee_right">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo reference="$(arg namespace)/knee_to_ankle_right">
+        <material>Gazebo/Orange</material>
+    </gazebo>
+
+    <gazebo reference="$(arg namespace)/ankle_to_torso_right">
+        <material>Gazebo/Yellow</material>
+    </gazebo>
+
+    <gazebo reference="$(arg namespace)/feet_link_right">
+        <material>Gazebo/Grey</material>
+    </gazebo>
+
+
+
+
+
+    
+
+</robot>

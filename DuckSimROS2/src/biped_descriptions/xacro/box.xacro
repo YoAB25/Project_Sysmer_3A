@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="box_robot">
+
+  <!-- Define parameters -->
+  <xacro:property name="length" value="1.0"/>
+  <xacro:property name="width" value="0.5"/>
+  <xacro:property name="height" value="0.2"/>
+
+  <!-- Define the link -->
+  <link name="base_link">
+    <!-- Define the visual geometry -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${length} ${width} ${height}"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 1 1"/>
+      </material>
+    </visual>
+    <!-- Define the collision geometry -->
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="${length} ${width} ${height}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Define the joint -->
+  <joint name="fixed_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.1" rpy="0 0 0"/>
+  </joint>
+
+</robot>

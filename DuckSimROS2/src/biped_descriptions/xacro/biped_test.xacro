@@ -1,0 +1,302 @@
+<?xml version="1.0"?>
+<robot name ="biped" 
+  xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 
+    Properties
+  -->
+  <xacro:property name = "torso_width" value = "0.075"/>
+  <xacro:property name = "torso_height" value = "0.10"/>
+  <xacro:property name = "torso_depth" value = "0.15"/>
+  <xacro:property name = "torso_mass" value = "0.5"/>
+
+  <xacro:property name = "neck_width" value = "0.01"/>
+  <xacro:property name = "neck_length" value = "0.05"/>
+  <xacro:property name = "neck_depth" value = "0.02"/>
+  <xacro:property name = "neck_mass" value = "0.02"/>
+
+  <xacro:property name = "head_width" value = "0.2"/>
+  <xacro:property name = "head_height" value = "0.05"/>
+  <xacro:property name = "head_depth" value = "0.2"/>
+  <xacro:property name = "head_mass" value = "0.25"/>
+
+  <xacro:property name = "foot_width" value = "0.05"/>
+  <xacro:property name = "foot_height" value = "0.005"/>
+  <xacro:property name = "foot_length" value = "0.3000"/>
+  <xacro:property name = "foot_mass" value = "0.2"/>
+
+  <xacro:property name = "lower_leg_width" value = "0.01"/>
+  <xacro:property name = "lower_leg_height" value = "0.02"/>
+  <xacro:property name = "lower_leg_length" value = "0.20"/>
+  <xacro:property name = "lower_leg_mass" value = "0.10"/>
+
+  <xacro:property name = "upper_leg_width" value = "0.01"/>
+  <xacro:property name = "upper_leg_height" value = "0.02"/>
+  <xacro:property name = "upper_leg_length" value = "0.20"/>
+  <xacro:property name = "upper_leg_mass" value = "0.10"/>
+
+<!--
+  Motor based on RMD-L-4015
+  http://www.gyems.cn/794904.html
+-->
+  <xacro:property name = "motor_length" value = "0.033"/>
+  <xacro:property name = "motor_radius" value = "0.0198"/>
+  <xacro:property name = "motor_mass" value = "0.120"/>
+  <xacro:property name = "motor_torque_nm" value = "20.49"/> <!-- stall torque 0.49 , nominal is 0.22 -->
+
+  <xacro:property name = "color_red" value = "1 0 0 1"/>
+  <xacro:property name = "color_gold" value = "0.831 0.686 0.216 1"/>
+  <xacro:property name = "color_dark_grey" value = "0.4 0.4 0.4 1"/>
+
+  <!-- 
+    Macros 
+  -->
+  <xacro:macro name="box_link" params="name m x y z origin:='0 0 0' rpy:='0 0 0' color">
+    <link name = "${name}">
+      <inertial>
+        <origin xyz="${origin}" rpy="${rpy}"/>
+        <mass value="${m}"/>
+        <inertia ixx = "${m/12*(y*y+z*z)}" ixy = "0.0" ixz="0.0" iyy="${m/12*(x*x+z*z)}" iyz="0.0" izz="${m/12*(x*x+y*y)}"/>
+      </inertial>
+      <visual>
+        <origin xyz="${origin}" rpy="${rpy}"/>
+        <geometry>
+          <box size="${x} ${y} ${z}" />
+        </geometry>
+        <material name="${name}_material">
+          <color rgba = "${color}"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="${origin}" rpy="${rpy}"/>
+        <geometry>
+          <box size="${x} ${y} ${z}" />
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+
+  <xacro:macro name="cylinder_link" params="name r l m color origin:='0 0 0' rpy:='0 0 0' ">
+    <link name="${name}">
+      <inertial>
+        <origin xyz="${origin}" rpy="${rpy}" />
+        <mass value="${m}"/>
+        <inertia ixx="${m*r*r/4+m*l*l}" ixy="0" ixz="0" iyy="${m*r*r/4+m*l*l}" iyz="0" izz="${m*r*r/2}" />
+      </inertial>
+
+      <visual>
+        <origin xyz="${origin}" rpy="${rpy}" />
+        <geometry>
+          <cylinder radius="${r}" length="${l}"/>
+        </geometry>
+        <material name="${name}_color">
+          <color rgba="${color}"/>
+        </material>
+      </visual>
+
+      <collision>
+        <origin xyz="${origin}" rpy="${rpy}" />
+        <geometry>
+          <cylinder radius="${r}" length="${l}"/>
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+  <!-- 
+    Links
+  -->
+  <link name="base_link"></link>
+  <xacro:box_link name="torso" x="${torso_depth}" y="${torso_width}" z="${torso_height}" m = "${torso_mass}" origin="0 0 ${-torso_height/2}" rpy="0 0 0.0" color = "${color_gold}"/>
+  <xacro:cylinder_link name="neck_motor" m="${motor_mass}" r="${motor_radius}" l="${motor_length}" rpy="${pi/2} 0 0" color="${color_dark_grey}"/>
+  <xacro:box_link name="neck" x="${neck_length}" y="${neck_width}" z="${neck_depth}" m = "${neck_mass}" origin="0 0 ${-neck_length/2}" rpy="0 ${-pi/2} 0.0" color = "${color_gold}"/>
+  <joint name="torso_neck_motor_offset" type="fixed">
+    <parent link = "torso"/>
+    <child link="neck_motor"/>
+    <origin xyz="0 0 ${motor_radius}" rpy="0 0 ${pi/2}"/>
+  </joint>
+
+  <joint name = "head_tilt" type = "revolute">
+      <axis xyz="0 1 0"/>
+      <limit effort="${motor_torque_nm*3}" lower="${-pi/2}" upper="${pi/2}" velocity="${2*pi/8}"/>
+      <origin rpy="${pi} 0 0" xyz="0 0 0"/>
+      <parent link="neck_motor"/>
+      <child link="neck"/>
+  </joint>
+  <xacro:box_link name="head" x="${head_depth}" y="${head_width}" z="${head_height}" m = "${head_mass}"  origin="0 0 ${-head_height/2}" rpy="0 0 0.0" color = "${color_gold}"/>
+  <joint name="neck_to_head_offset" type="fixed">
+    <parent link = "neck"/>
+    <child link="head"/>
+    <origin xyz="0 0 ${-neck_length}" rpy="0 0 ${pi/2}"/>
+  </joint>
+
+
+  <xacro:macro name="leg_assembly" params="leg_name origin">
+
+    <xacro:cylinder_link name="${leg_name}_hip_motor" m="${motor_mass}" r="${motor_radius}" l="${motor_length}" rpy="${pi/2} 0 0" color="${color_dark_grey}"/>
+    <xacro:box_link name="upper_${leg_name}_leg" x="${upper_leg_length}" y="${upper_leg_height}" z="${upper_leg_width}" m = "${upper_leg_mass}" origin="0 0 ${-upper_leg_length/2}" rpy="0 ${-pi/2} 0.0" color = "${color_red}"/>
+    <xacro:cylinder_link name="${leg_name}_knee_motor" m="${motor_mass}" r="${motor_radius}" l="${motor_length}" rpy="${pi/2} 0 0" color="${color_dark_grey}"/>
+    <xacro:box_link name="lower_${leg_name}_leg" x="${lower_leg_length}" y="${lower_leg_height}" z="${lower_leg_width}" m = "${lower_leg_mass}" origin="0 0 ${-lower_leg_length/2}" rpy="0 ${-pi/2} 0.0" color = "${color_gold}"/>
+    <xacro:cylinder_link name="${leg_name}_ankle_motor" m="${motor_mass}" r="${motor_radius}" l="${motor_length}" rpy="${pi/2} 0 0" color="${color_dark_grey}"/>
+    <xacro:box_link name="${leg_name}_foot" x="${foot_length}" y="${foot_width}" z="${foot_height}" m = "${foot_mass}" origin="0 0 ${-motor_radius -foot_height/2}" rpy="0 0.0 0.0" color = "${color_red}"/>
+    <joint name="torso_to_${leg_name}_hip_motor_joint" type="fixed">
+      <parent link="torso"/>
+      <origin xyz="${origin}" rpy="0 0 0"/>
+      <child link="${leg_name}_hip_motor"/>
+    </joint>
+
+    <joint name = "${leg_name}_hip" type = "revolute">
+      <axis xyz="0 1 0"/>
+      <limit effort="${motor_torque_nm}" lower="${-2*pi}" upper="${2*pi}" velocity="0.5"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <parent link="${leg_name}_hip_motor"/>
+      <child link="upper_${leg_name}_leg"/>
+    </joint>
+
+    <joint name="upper_${leg_name}_leg_to_knee_motor_joint" type="fixed">
+      <parent link="upper_${leg_name}_leg"/>
+      <origin xyz="0 0 ${-upper_leg_length}" rpy="0 0 0"/>
+      <child link="${leg_name}_knee_motor"/>
+    </joint>
+
+    <joint name = "${leg_name}_knee" type = "revolute">
+      <axis xyz="0 1 0"/>
+      <limit effort="${motor_torque_nm}" lower="${-2*pi}" upper="${2*pi}" velocity="0.5"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <parent link="${leg_name}_knee_motor"/>
+      <child link="lower_${leg_name}_leg"/>
+    </joint>
+
+    <joint name = "lower_${leg_name}_leg_to_ankle_motor" type="fixed">
+      <parent link = "lower_${leg_name}_leg"/>
+      <child link = "${leg_name}_ankle_motor"/>
+      <origin xyz="0 0 ${-lower_leg_length} "/>
+    </joint>
+
+    <joint name = "${leg_name}_ankle" type = "revolute">
+      <axis xyz="0 1 0"/>
+      <limit effort="${motor_torque_nm*3}" lower="${-2*pi}" upper="${2*pi}" velocity="0.5"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <parent link="${leg_name}_ankle_motor"/>
+      <child link="${leg_name}_foot"/>
+    </joint>
+
+  <gazebo reference="head">
+    <material>Gazebo/Gold</material>
+  </gazebo>
+  <gazebo reference="neck">
+    <material>Gazebo/Gold</material>
+  </gazebo>
+  <gazebo reference="neck_motor">
+    <material>Gazebo/DarkGray</material>
+  </gazebo>
+
+
+
+  <gazebo reference="${leg_name}_foot">
+    <material>Gazebo/Red</material>
+  </gazebo>
+
+    <gazebo reference="lower_${leg_name}_leg">
+      <material>Gazebo/Gold</material>
+    </gazebo>
+
+    <gazebo reference="upper_${leg_name}_leg">
+      <material>Gazebo/Red</material>
+    </gazebo>
+
+    <gazebo reference="${leg_name}_knee_motor">
+      <material>Gazebo/DarkGray</material>
+    </gazebo>
+
+    <gazebo reference="${leg_name}_ankle_motor">
+      <material>Gazebo/DarkGray</material>
+    </gazebo>
+
+    <gazebo reference="${leg_name}_hip_motor">
+      <material>Gazebo/DarkGray</material>
+    </gazebo>
+
+  <!-- 
+    Transmissions for robot control
+  -->
+  <transmission name="${leg_name}_ankle_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${leg_name}_ankle">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="${leg_name}_ankle_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>3</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="${leg_name}_knee_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${leg_name}_knee">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="${leg_name}_knee_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  <transmission name="${leg_name}_hip_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="${leg_name}_hip">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="${leg_name}_hip_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+  
+  </xacro:macro>
+
+  <xacro:leg_assembly leg_name="left" origin="0 ${torso_width/2+motor_length/2} ${-motor_radius}"/>
+  <xacro:leg_assembly leg_name="right" origin="0 ${-(torso_width/2+motor_length/2)} ${-motor_radius}"/>
+
+  <!-- 
+    Joints
+  -->
+  <joint name="base_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="torso"/>
+    <origin xyz="0 0 2.0"/>
+  </joint>
+
+
+  <!--
+    Gazebo colors from
+    https://github.com/osrf/gazebo/blob/master/media/materials/scripts/gazebo.material
+  -->
+  <gazebo reference="torso">
+    <material>Gazebo/Gold</material>
+  </gazebo>
+
+
+  <!--
+    Gazebo ros control
+  -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/biped</robotNamespace>
+    </plugin>
+  </gazebo>
+
+  <transmission name="$head_tilt_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="head_tilt">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="neck_motor">
+      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+</robot>

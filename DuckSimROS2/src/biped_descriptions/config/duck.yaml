@@ -1,0 +1,31 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    effort_controller:
+      type: effort_controllers/JointGroupEffortController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+effort_controller:
+  ros__parameters:
+    joints:
+      - duck/hip_joint_left
+      - duck/hip_joint_right
+      # - duck/to_hip_joint_left
+      # - duck/to_hip_joint_right
+      # - duck/knee_joint_left
+      # - duck/knee_joint_right
+      # - duck/to_knee_joint_left
+      # - duck/to_knee_joint_right
+      # - duck/ankle_joint_left
+      # - duck/ankle_joint_right
+      # - duck/to_ankle_joint_left
+      # - duck/to_ankle_joint_right
+      # - duck/torso_joint_left
+      # - duck/torso_joint_right
+      # - duck/to_feet_joint_left
+      # - duck/to_feet_joint_right
+      # - duck/to_toe_joint_right
+      # - duck/to_toe_joint_left
