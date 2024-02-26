@@ -41,6 +41,7 @@ install(
     xacro
     urdf
     rviz
+    stl
   DESTINATION
     share/${PROJECT_NAME}/
 )

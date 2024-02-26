@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/youssefab/All_Projects/Project_Sysmer_3A/DuckSimROS2/install/pan_tilt_msgs/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/youssefab/All_Projects/Project_Sysmer_3A/DuckSimROS2/src/biped_descriptions/include/**",
+        "/home/youssefab/All_Projects/Project_Sysmer_3A/DuckSimROS2/src/biped_gazebo_worlds/include/**",
+        "/home/youssefab/All_Projects/Project_Sysmer_3A/DuckSimROS2/src/iqr_pan_tilt_controller_ros2/pan_tilt_driver/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

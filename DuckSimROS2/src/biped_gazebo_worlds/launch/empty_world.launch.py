@@ -22,7 +22,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gazebo.launch.py'),
         ),
-        launch_arguments={'pause': 'true'}.items()  # Add the 'pause' argument
+        launch_arguments=[('pause', 'true')],  # Pass the pause argument here
     )    
 
     return LaunchDescription([

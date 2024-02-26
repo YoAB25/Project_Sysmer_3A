@@ -421,7 +421,7 @@
       <axis xyz="-1 0 0"/>
       <parent link="${side}_pelvis_rotation" />
       <child link="${side}_hip" />
-      <limit lower="0.0" upper="0.0" effort="2000.0" velocity="12.1475" />
+      <limit lower="-0.0" upper="0.0" effort="1.0" velocity="1.0" />
     </joint>
   </xacro:macro>
   <xacro:macro name="hip_flexion" params="side">
@@ -466,17 +466,17 @@
   <xacro:macro name="toe_joint" params="side">
     <joint name="toe_joint_${side}" type="revolute">
       <origin xyz="0.408 -0.04 0" rpy="0 0 -1.5"/>
-      <axis xyz="0 0 1"/>
+      <axis xyz="0 1 0"/>
       <parent link="${side}_tarsus" />
       <child link="${side}_toe" />
-      <limit lower="0" upper="0" effort="2000.0" velocity="11.5192" />
+      <limit lower="0" upper="0" effort="0.01" velocity="0.1" />
     </joint>
   </xacro:macro>
   
   
   <!-- Transmission Definitions -->
-  <xacro:macro name="hip_rotation_trans" params="side">
-    <ros2_control name="hip_rotation_trans_${side}" type="system">
+  <!-- <xacro:macro name="hip_abduction_trans" params="side">
+    <ros2_control name="hip_abduction_trans_${side}" type="system">
       <hardware>
         <plugin>gazebo_ros2_control/GazeboSystem</plugin>
       </hardware>
@@ -495,12 +495,46 @@
   </xacro:macro>
 
 
+  <xacro:macro name="hip_rotation_trans" params="side">
+    <ros2_control name="hip_rotation_trans_${side}" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+      <joint name="hip_rotation_${side}">
+        <command_interface name="effort">
+          <param name="min">-10</param>
+          <param name="max">+10</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+    </ros2_control>
+  </xacro:macro>
 
+  <xacro:macro name="toe_joint_trans" params="side">
+    <ros2_control name="knee_joint_trans_${side}" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+      <joint name="toe_joint_${side}">
+        <command_interface name="effort">
+          <param name="min">-10</param>
+          <param name="max">+10</param>
+        </command_interface>
+        <state_interface name="position">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+        <state_interface name="velocity"/>
+        <state_interface name="effort"/>
+      </joint>
+    </ros2_control>
+  </xacro:macro> -->  
 
-
-
-
-  <!-- <xacro:macro name="hip_abduction_trans" params="side">
+<!-- ******************************************************************************   -->
+  <xacro:macro name="hip_abduction_trans" params="side">
         <transmission name="hip_abduction_trans_${side}">
         <type>transmission_interface/SimpleTransmission</type>
         <joint name="hip_abduction_${side}">
@@ -511,9 +545,9 @@
             <mechanicalReduction>25</mechanicalReduction>
         </actuator>
     </transmission>
-  </xacro:macro> -->
+  </xacro:macro>
   
-  <!-- <xacro:macro name="hip_rotation_trans" params="side">
+  <xacro:macro name="hip_rotation_trans" params="side">
     <transmission name="hip_rotation_trans_${side}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="hip_rotation_${side}">
@@ -525,7 +559,6 @@
       </actuator>
     </transmission>
   </xacro:macro>
-  
   
   <xacro:macro name="hip_flexion_trans" params="side">
     <transmission name="hip_flexion_trans_${side}">
@@ -567,7 +600,7 @@
       </actuator>
     </transmission>
     
-  </xacro:macro>  -->
+  </xacro:macro> 
   
 
   <!-- Links -->
@@ -612,14 +645,12 @@
   <!-- Transmissions -->
   <xacro:hip_rotation_trans side="left"/>
   <xacro:hip_rotation_trans side="right"/>
+  <xacro:hip_abduction_trans side="left"/>
+  <xacro:hip_abduction_trans side="right"/> 
+  <xacro:toe_joint_trans side="left"/>
+  <xacro:toe_joint_trans side="right"/>
 
 
-
-  <gazebo>
-        <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
-          <parameters>$(find biped_descriptions)/config/cassie_efforts.yaml</parameters>
-        </plugin>
-  </gazebo>
 
   
   

@@ -12,6 +12,10 @@ effort_controller:
     joints:
       - hip_abduction_right
       - hip_abduction_left
+      - hip_rotation_left
+      - hip_rotation_right
+      - toe_joint_left
+      - toe_joint_right
     interface_name: effort
     command_interfaces:
       - effort

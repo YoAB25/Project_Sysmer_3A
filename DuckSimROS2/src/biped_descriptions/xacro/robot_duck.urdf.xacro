@@ -1,0 +1,420 @@
+<?xml version="1.0"?>
+<robot name="robot_duck" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <!-- Propreties -->
+    <xacro:arg name="namespace" default="robot_duck"/>
+    <xacro:arg name="debug" default="0"/>
+
+    <xacro:arg name="cog" default="0 0 0"/>
+    <xacro:arg name="mass" default="0.01"/>
+
+    <material name="brown">
+        <color rgba="0.588 0.294 0.0 1"/>
+    </material>
+    <material name="black">
+        <color rgba="0.1 0.1 0.1 1"/>
+    </material>
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+    
+    <!-- Links MACRO -->
+    <xacro:macro name="mesh_link" params="name origin_xyz origin_rpy box_size meshscale c_xyz matname mass i_xyz i_rpy length width height">
+        <link name="${name}">
+        <visual>
+            <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+            <geometry>
+                <!-- <mesh filename="${meshfile}" scale="${meshscale}"/> -->
+                <box size="${box_size}"/>
+            </geometry>
+            <material name="${matname}"/>
+        </visual>
+
+        <collision>
+            <origin rpy="${origin_rpy}" xyz="${c_xyz}" />
+            <geometry>
+                <box size="${length} ${width} ${height}" />
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="${mass}" />
+            <origin rpy="${i_rpy}" xyz="${i_xyz}" /> <!-- Inertial Axes -->
+            <inertia ixx="${mass * (width * width + height * height)/12.0}" ixy="${0}" ixz="${0}" iyx="${0}" iyy="${mass * (length * length + height * height)/12.0}" iyz="${0}" izx="${0}" izy="${0}" izz="${mass * (length * length + width * width)/12.0}" />
+        </inertial>
+        </link>
+    </xacro:macro>
+    
+    <!-- Joint MACRO -->
+    <xacro:macro name="frame_joint" params="name type origin_rpy origin_xyz parent child">
+        <joint name="${name}" type="${type}">
+        <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+        <parent link="${parent}" />
+        <child link="${child}" />
+        </joint>
+    </xacro:macro>
+
+    <xacro:macro name="rev_joint" params="name type axis_xyz origin_rpy origin_xyz parent child effort velocity damping friction upper lower">
+        <joint name="${name}" type="${type}">
+        <axis xyz="${axis_xyz}" />
+        <origin rpy="${origin_rpy}" xyz="${origin_xyz}" />
+        <parent link="${parent}" />
+        <child link="${child}" />
+        <limit effort="${effort}" velocity="${velocity}" lower="${lower}" upper="${upper}"/>
+        <joint_properties damping="${damping}" friction="${friction}" />
+        </joint>
+    </xacro:macro>
+
+    <!-- Transmissions -->
+
+
+
+    <!-- *******************************************************************************  -->
+
+    <!-- Offsets-->
+	<xacro:property name="center_thickness" value="0.018" />
+	<xacro:property name="center_orgin_offset" value="0.5" />
+	<xacro:property name="side_length" value="0.148" />
+	<xacro:property name="bridge_length" value="0.0535" />
+    <xacro:property name="OFFSET_Z" value="1.0"/>
+
+    <!-- Limits -->
+    <xacro:property name="hip_upper_limit" value="${180 * pi/180}" /> 
+    <xacro:property name="hip_lower_limit" value="${-180 * pi/180}" /> 
+    <xacro:property name="upper_leg_upper_limit" value="${180 * pi/180}" /> 
+    <xacro:property name="upper_leg_lower_limit" value="${-180 * pi/180}" /> 		
+    <xacro:property name="lower_leg_upper_limit" value="${180 * pi/180}" /> 
+    <xacro:property name="lower_leg_lower_limit" value="${-180 * pi/180}" /> 
+
+
+	<xacro:property name="hip_upper_limit" value="${180 * pi/180}" /> 
+    <xacro:property name="hip_lower_limit" value="${-180 * pi/180}" /> 
+
+	<xacro:property name="knee_upper_limit" value="${180 * pi/180}" /> 
+    <xacro:property name="knee_lower_limit" value="${-180 * pi/180}" />
+
+	<xacro:property name="ankle_upper_limit" value="${180 * pi/180}" /> 
+    <xacro:property name="ankle_lower_limit" value="${-180 * pi/180}" />
+
+	<xacro:property name="feet_upper_limit" value="${180 * pi/180}" /> 
+    <xacro:property name="feet_lower_limit" value="${-180 * pi/180}" />
+
+
+     <!-- Origin of the world -->
+    <!-- <xacro:mesh_link name="origin_link"
+		origin_rpy="0 0 0"
+		origin_xyz="0 0 ${-0.15/2 + OFFSET_Z}"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.6"
+		c_xyz="0 0 0"
+		length="0.12"
+		width="0.12"
+		height="0.12"
+		matname="brown"
+		box_size="0.12 0.12 0.12"
+		meshscale="1 1 1"/> -->
+
+
+    <!-- Base link -->
+    <xacro:mesh_link name="base_link"
+		origin_rpy="0 0 0"
+		origin_xyz="0 0 0.0"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.6"
+		c_xyz="0 0 0"
+		length="0.08"
+		width="0.08"
+		height="0.08"
+		matname="brown"
+		box_size="0.08 0.08 0.08"
+		meshscale="1 1 1"/>
+    
+
+    <!-- Base to femur link (R) -->
+    <xacro:mesh_link name="base_to_femur_right"
+		origin_rpy="0 0 0"
+		origin_xyz="0 0 0"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.01"
+		c_xyz="0 0 0"
+		length="0.01"
+		width="0.01"
+		height="0.01"
+		matname="brown"
+		box_size="0.01 0.01 0.01"
+		meshscale="1 1 1"/>
+
+    <!-- Base to femur link (L) -->
+    <xacro:mesh_link name="base_to_femur_left"
+		origin_rpy="0 0 0"
+		origin_xyz="0 0 0"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.01"
+		c_xyz="0 0 0"
+		length="0.01"
+		width="0.01"
+		height="0.01"
+		matname="brown"
+		box_size="0.01 0.01 0.01"
+		meshscale="1 1 1"/>
+
+    
+    <!-- Hip joint (L) -->
+    <xacro:rev_joint name="hip_rev_joint_left" 
+				type="revolute"
+			    axis_xyz="1 0 0"
+			    origin_rpy="0 0 ${pi}" 
+				origin_xyz="0 +${0.08/2} 0"    
+			    effort="4.0"
+			    velocity="4.0"
+			    damping="0.0"
+			    friction="0.0"
+			    upper="${hip_upper_limit}"
+			    lower="${hip_lower_limit}"            
+			    parent="base_link"
+			    child="base_to_femur_right" />
+
+
+    <!-- Hip joint (R) -->
+    <xacro:rev_joint name="hip_rev_joint_right" 
+				type="revolute"
+			    axis_xyz="1 0 0"
+			    origin_rpy="0 0 ${pi}" 
+				origin_xyz="0 -${0.08/2} 0"    
+			    effort="4.0"
+			    velocity="4.0"
+			    damping="0.0"
+			    friction="0.0"
+			    upper="${hip_upper_limit}"
+			    lower="${hip_lower_limit}"            
+			    parent="base_link"
+			    child="base_to_femur_left" />
+
+    <!-- Femur link (R) -->
+    <xacro:mesh_link name="femur_link_right"
+		origin_rpy="0 +${pi/6} 0"
+		origin_xyz="-0.023 0 -0.04"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.01"
+		c_xyz="0 0 0"
+		length="0.015"
+		width="0.015"
+		height="0.08"
+		matname="brown"
+		box_size="0.015 0.015 0.08"
+		meshscale="1 1 1"/>
+    
+    <!-- Hip joint (R) -->
+    <xacro:rev_joint name="to_knee_joint_right" 
+				type="revolute"
+			    axis_xyz="0 1 0"
+			    origin_rpy="0 0 ${pi}" 
+				origin_xyz="0 0 0"    
+			    effort="4.0"
+			    velocity="4.0"
+			    damping="0.0"
+			    friction="0.0"
+			    upper="${hip_upper_limit}"
+			    lower="${hip_lower_limit}"            
+			    parent="base_to_femur_right"
+			    child="femur_link_right" />
+
+    <!-- Femur link (L) -->
+    <xacro:mesh_link name="femur_link_left"
+		origin_rpy="0 +${pi/6} 0"
+		origin_xyz="-0.023 0 -0.04"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.01"
+		c_xyz="0 0 0"
+		length="0.015"
+		width="0.015"
+		height="0.08"
+		matname="brown"
+		box_size="0.015 0.015 0.08"
+		meshscale="1 1 1"/>
+    
+    <!-- Hip joint (L) -->
+    <xacro:rev_joint name="to_knee_joint_left" 
+				type="revolute"
+			    axis_xyz="0 1 0"
+			    origin_rpy="0 0 ${pi}" 
+				origin_xyz="0 0 0"    
+			    effort="4.0"
+			    velocity="4.0"
+			    damping="0.0"
+			    friction="0.0"
+			    upper="${hip_upper_limit}"
+			    lower="${hip_lower_limit}"            
+			    parent="base_to_femur_left"
+			    child="femur_link_left" />
+
+
+    <!-- Knee link (R) -->
+    <xacro:mesh_link name="tibio_link_right"
+		origin_rpy="0 0 0"
+		origin_xyz="0.0 0.0 -${0.12/2}"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.01"
+		c_xyz="0 0 0"
+		length="0.015"
+		width="0.015"
+		height="0.12"
+		matname="brown"
+		box_size="0.015 0.015 0.12"
+		meshscale="1 1 1"/>
+    
+    <!-- Knee joint (R) -->
+    <xacro:rev_joint name="knee_joint_right" 
+				type="revolute"
+			    axis_xyz="0 1 0"
+			    origin_rpy="0 ${60*pi/180} ${pi}" 
+				origin_xyz="-0.04 -0.0 -0.07"    
+			    effort="4.0"
+			    velocity="4.0"
+			    damping="0.0"
+			    friction="0.0"
+			    upper="${hip_upper_limit}"
+			    lower="${hip_lower_limit}"            
+			    parent="femur_link_right"
+			    child="tibio_link_right" />
+
+
+
+    <!-- Knee link (L) -->
+    <xacro:mesh_link name="tibio_link_left"
+		origin_rpy="0 0 0"
+		origin_xyz="0.0 0.0 -${0.12/2}"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.01"
+		c_xyz="0 0 0"
+		length="0.015"
+		width="0.015"
+		height="0.12"
+		matname="brown"
+		box_size="0.015 0.015 0.12"
+		meshscale="1 1 1"/>
+    
+    <!-- Knee joint (L) -->
+    <xacro:rev_joint name="knee_joint_left" 
+				type="revolute"
+			    axis_xyz="0 1 0"
+			    origin_rpy="0 ${60*pi/180} ${pi}" 
+				origin_xyz="-0.04 -0.0 -0.07"    
+			    effort="4.0"
+			    velocity="4.0"
+			    damping="0.0"
+			    friction="0.0"
+			    upper="${hip_upper_limit}"
+			    lower="${hip_lower_limit}"            
+			    parent="femur_link_left"
+			    child="tibio_link_left" />
+
+    <!-- *** -->
+    
+    <!-- Tarso link (R) -->
+    <xacro:mesh_link name="tarso_link_right"
+		origin_rpy="0 0 0"
+		origin_xyz="0.0 0.0 -${0.06/2}"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.01"
+		c_xyz="0 0 0"
+		length="0.015"
+		width="0.015"
+		height="0.06"
+		matname="brown"
+		box_size="0.015 0.015 0.06"
+		meshscale="1 1 1"/>
+    
+    <!-- Tarso joint (R) -->
+    <xacro:rev_joint name="ankle_joint_right" 
+				type="revolute"
+			    axis_xyz="0 1 0"
+			    origin_rpy="0 ${120*pi/180} ${pi}" 
+				origin_xyz="0.0 -0.0 -0.12"    
+			    effort="4.0"
+			    velocity="4.0"
+			    damping="0.0"
+			    friction="0.0"
+			    upper="${hip_upper_limit}"
+			    lower="${hip_lower_limit}"            
+			    parent="tibio_link_right"
+			    child="tarso_link_right" />
+
+    <!-- Tarso link (L) -->
+    <xacro:mesh_link name="tarso_link_left"
+		origin_rpy="0 0 0"
+		origin_xyz="0.0 0.0 -${0.06/2}"  
+		i_rpy="0 0 0"
+		i_xyz="0 0 0"
+		mass="0.01"
+		c_xyz="0 0 0"
+		length="0.015"
+		width="0.015"
+		height="0.06"
+		matname="brown"
+		box_size="0.015 0.015 0.06"
+		meshscale="1 1 1"/>
+    
+    <!-- Tarso joint (L) -->
+    <xacro:rev_joint name="ankle_joint_left" 
+				type="revolute"
+			    axis_xyz="0 1 0"
+			    origin_rpy="0 ${120*pi/180} ${pi}" 
+				origin_xyz="0.0 -0.0 -0.12"    
+			    effort="4.0"
+			    velocity="4.0"
+			    damping="0.0"
+			    friction="0.0"
+			    upper="${hip_upper_limit}"
+			    lower="${hip_lower_limit}"            
+			    parent="tibio_link_left"
+			    child="tarso_link_left" />
+
+    
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</robot>

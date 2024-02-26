@@ -1,120 +1,95 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import os
-import sys
-import rclpy
-from gazebo_msgs.srv import SpawnEntity
-import xacro
+
+from ament_index_python.packages import get_package_share_path
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import Command, LaunchConfiguration
+
+from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription
+from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.event_handlers import OnProcessExit
-
-
-# At this stage this import isn't really usefull
-# from moveit_configs_utils import MoveItConfigdBuilder
 
 def generate_launch_description():
-    # Define the gazebo node & launch the empty gazebo world - Gazebo empty world
-    # gazebo = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([os.path.join(
-    #     get_package_share_directory('gazebo_ros'),
-    #     'launch', 'gazebo.launch.py')])      
-    # )
-
-    # Define the gazebo node & launch the empty gazebo world - Gazebo factory world
+    package_path = get_package_share_path('biped_descriptions')
+    default_model_path = package_path / 'urdf/robot_duck.urdf.xacro'
+    default_rviz_config_path = package_path / 'config/robot_duck.rviz'
+    
+    # Include the empty world launch file with a pause argument
     gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-        get_package_share_directory('biped_gazebo_worlds'),
-        'launch', 'empty_world.launch.py')])      
+        PythonLaunchDescriptionSource([
+            os.path.join(get_package_share_directory('biped_gazebo_worlds'), 'launch', 'empty_world.launch.py')
+        ]),
+        launch_arguments={
+            'paused': 'true'  # Set Gazebo to start in a paused state
+        }.items()
     )
 
-    # Define the package path for the descriptions
-    biped_gazebo_pkg_path = get_package_share_directory('biped_gazebo_worlds')
-    biped_descriptions_pkg_path = get_package_share_directory('biped_descriptions')
+    gui_arg = DeclareLaunchArgument(name='gui', default_value='true', choices=['true', 'false'],
+                                    description='Flag to enable joint_state_publisher_gui')    
+    model_arg = DeclareLaunchArgument(name='model', default_value=str(default_model_path),
+                                      description='Absolute path to robot urdf file')    
 
-    # Load parameters from the cassie.yaml file
-    cassie_yaml = os.path.join(biped_gazebo_pkg_path, 'config', 'cassie.yaml')
-
-
-
-    # Define the package path
-    package_path = os.path.join(get_package_share_directory('biped_gazebo_worlds'))
-
-    # Define the XACRO file name and path 
-    xacro_file = os.path.join(biped_descriptions_pkg_path, 'xacro', 'cassie_real.xacro')
-
-    # IDK maybe to make the hole thingy an xml urdf format I don't know
-    doc = xacro.parse(open(xacro_file))
-    xacro.process_doc(doc)
-    params = {'robot_description' : doc.toxml()}
-
-    # Declare the robot state publisher node
-    node_robot_state_publisher = Node(
+    rviz_arg = DeclareLaunchArgument(name='rvizconfig', default_value=str(default_rviz_config_path),
+                                     description='Absolute path to rviz config file')
+    
+    robot_description = ParameterValue(Command(['xacro ', LaunchConfiguration('model')]),
+                                       value_type=str)
+       
+    robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        output='screen',
-        parameters=[params]
+        parameters=[{'robot_description': robot_description}]
     )
 
-    # Declare the robot state publisher node
-    node_joint_state_publisher = Node(
+    # Depending on gui parameter, either launch joint_state_publisher or joint_state_publisher_gui
+    joint_state_publisher_node = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
+        condition=UnlessCondition(LaunchConfiguration('gui'))
+    )
+
+    joint_state_publisher_gui_node = Node(
+        package='joint_state_publisher_gui',
+        executable='joint_state_publisher_gui',
+        condition=IfCondition(LaunchConfiguration('gui'))
+    )
+
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
         output='screen',
-        parameters=[params]
+        arguments=['-d', LaunchConfiguration('rvizconfig')],
     )
 
     # Spawn the entity inside the world
     spawn_entity = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
-        arguments=['-topic', '/robot_description', '-entity', 'cassie_test', '-x', '2.436112', '-y', '-0.003190', '-z', '0.867325', '-Y', '0.041840', '-R', '0.002779', '-P', '-0.877833'],
+        arguments=['-topic', '/robot_description', '-entity', 'simplified_duck'],
         output='screen'
     )
 
-    # Node to load controllers and transmissions
-    # load_controller_transmission = Node(
-    #     package='controller_manager',
-    #     executable='ros2_control_node',
-    #     name='ros2_control_node',
-    #     output='screen',
-    #     parameters=[{'use_sim_time': False, 'yaml_file': cassie_yaml}],
-    # )
-
-    load_joint_state_broadcaster = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'joint_state_broadcaster'],
-        output='screen'
-    )
-    load_joint_trajectory_controller = ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active', 'effort_controller'],
-        output='screen'
-    )
-  
-    return LaunchDescription(
-        [gazebo,
-        node_robot_state_publisher,
-        node_joint_state_publisher,
+    return LaunchDescription([
+        gazebo,
+        gui_arg,
+        model_arg,
+        rviz_arg,
         spawn_entity,
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=spawn_entity,
-                on_exit=[load_joint_state_broadcaster],
-            )
-            
-        ),
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=load_joint_state_broadcaster,
-                on_exit=[load_joint_trajectory_controller],
-            )
-        )
-        
-
-        ]
-    )
-
+        robot_state_publisher_node,
+        joint_state_publisher_node,
+        joint_state_publisher_gui_node,
+        rviz_node
+    ])
